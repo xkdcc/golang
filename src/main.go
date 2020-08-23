@@ -43,7 +43,7 @@ func getPost(w http.ResponseWriter, r *http.Request) {
 func createPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var post Post
-	_ = json.NewDecoder(r.Body).Decode(post)
+	_ = json.NewDecoder(r.Body).Decode(&post)
 	post.ID = strconv.Itoa(rand.Intn(1000000))
 	posts = append(posts, post)
 	json.NewEncoder(w).Encode(&post)
@@ -57,7 +57,11 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 			posts = append(posts[:index], posts[index+1:]...)
 
 			var post Post
-			_ = json.NewDecoder(r.Body).Decode(post)
+			dec := json.NewDecoder(r.Body)
+			dec.DisallowUnknownFields()
+			_ = dec.Decode(&post)
+			// Not allow specify id in body, it has been specified in URL
+			// Now assign it back
 			post.ID = params["id"]
 			posts = append(posts, post)
 			json.NewEncoder(w).Encode(&post)
